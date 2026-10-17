@@ -16,6 +16,7 @@ export default function Card({
 }: CardProps) {
   return (
     <article className="reusable-card">
+      {image && <img src={image} alt={title} />}
 
       <div className="card-content">
         <h3>{title}</h3>

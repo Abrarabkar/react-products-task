@@ -1,5 +1,5 @@
 ﻿
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "danger";
 

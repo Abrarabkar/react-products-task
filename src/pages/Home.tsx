@@ -1,4 +1,5 @@
-﻿import Button from "../components/ui/Button";
+﻿
+import Button from "../components/ui/Button";
 import EmptyState from "../components/common/EmptyState";
 
 export default function Home() {
@@ -6,7 +7,12 @@ export default function Home() {
     <main>
       <h1>Home Page</h1>
       <p>Welcome to my React project structure.</p>
-      <Button onClick={() => alert("Hello!")}>Click me</Button>
+
+      <Button
+        text="Click me"
+        onClick={() => alert("Hello!")}
+      />
+
       <EmptyState />
     </main>
   );
