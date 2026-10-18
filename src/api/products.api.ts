@@ -1,4 +1,3 @@
-
 export interface Product {
     id: number;
     title: string;
@@ -25,7 +24,9 @@ export interface Product {
     search = ""
   ): Promise<ProductsResponse> {
     const endpoint = search.trim()
-      ? `${BASE_URL}/search?q=${encodeURIComponent(search.trim())}&limit=${limit}&skip=${skip}`
+      ? `${BASE_URL}/search?q=${encodeURIComponent(
+          search.trim()
+        )}&limit=${limit}&skip=${skip}`
       : `${BASE_URL}?limit=${limit}&skip=${skip}`;
   
     const response = await fetch(endpoint);
@@ -37,7 +38,9 @@ export interface Product {
     return response.json();
   }
   
-  export async function getProductById(id: number): Promise<Product> {
+  export async function getProductById(
+    id: number
+  ): Promise<Product> {
     const response = await fetch(`${BASE_URL}/${id}`);
   
     if (!response.ok) {
@@ -47,3 +50,14 @@ export interface Product {
     return response.json();
   }
   
+  export async function getProductCategories(): Promise<
+    { slug: string; name: string; url: string }[]
+  > {
+    const response = await fetch(`${BASE_URL}/categories`);
+  
+    if (!response.ok) {
+      throw new Error("Failed to fetch product categories");
+    }
+  
+    return response.json();
+  }

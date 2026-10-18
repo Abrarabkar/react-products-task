@@ -1,123 +1,327 @@
-
 import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../api/products.api";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+const categories = [
+  {
+    label: "All Products",
+    value: "all",
+  },
+  {
+    label: "Skincare",
+    value: "beauty",
+  },
+  {
+    label: "Haircare",
+    value: "haircare",
+  },
+  {
+    label: "Makeup",
+    value: "makeup",
+  },
+  {
+    label: "Bath & Body",
+    value: "bath",
+  },
+];
 
 export default function Products() {
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+
+  const search = searchParams.get("q") || "";
+
   const [page, setPage] = useState(0);
-  const limit = 10;
+  const [category, setCategory] = useState("all");
+
+  const limit = 8;
 
   const { data, isPending, isError } = useQuery({
     queryKey: ["products", search, page],
-    queryFn: () => getProducts(limit, page * limit, search),
+    queryFn: () =>
+      getProducts(
+        limit,
+        page * limit,
+        search
+      ),
     placeholderData: (previousData) => previousData,
   });
 
-  function handleSearch(value: string) {
-    setSearch(value);
+  function handleCategory(value: string) {
+    setCategory(value);
     setPage(0);
   }
 
-  if (isPending) {
-    return <p className="p-8 text-center">Loading products...</p>;
-  }
+  /*
+   * DummyJSON doesn't contain the exact categories
+   * from the reference design.
+   *
+   * Therefore we use simple keyword filtering
+   * for the extra beauty categories.
+   */
+  const filteredProducts =
+    data?.products.filter((product) => {
+      if (category === "all") {
+        return true;
+      }
 
-  if (isError) {
-    return (
-      <p className="p-8 text-center text-red-600">
-        Failed to load products. Please try again.
-      </p>
-    );
-  }
+      if (category === "beauty") {
+        return product.category === "beauty";
+      }
 
-  const totalPages = Math.ceil(data.total / limit);
+      if (category === "haircare") {
+        return (
+          product.title.toLowerCase().includes("hair") ||
+          product.description.toLowerCase().includes("hair")
+        );
+      }
+
+      if (category === "makeup") {
+        const text =
+          `${product.title} ${product.description}`.toLowerCase();
+
+        return (
+          text.includes("makeup") ||
+          text.includes("lip") ||
+          text.includes("mascara") ||
+          text.includes("eyeshadow") ||
+          text.includes("foundation")
+        );
+      }
+
+      if (category === "bath") {
+        const text =
+          `${product.title} ${product.description}`.toLowerCase();
+
+        return (
+          text.includes("body") ||
+          text.includes("bath") ||
+          text.includes("soap")
+        );
+      }
+
+      return true;
+    }) || [];
+
+  const totalPages = data
+    ? Math.max(1, Math.ceil(data.total / limit))
+    : 1;
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl">
-        <h1 className="mb-6 text-3xl font-bold">Products</h1>
+    <main className="shop-page">
 
-        <input
-          type="search"
-          placeholder="Search products..."
-          value={search}
-          onChange={(event) => handleSearch(event.target.value)}
-          className="mb-8 w-full rounded-lg border bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {/* =========================
+          HERO
+      ========================= */}
 
-        {data.products.length === 0 ? (
-          <p className="py-12 text-center text-gray-500">
-            No products found.
+      <section className="shop-hero">
+
+        {/* Decorative stars */}
+        <span className="decorative-star star-one">
+          ✦
+        </span>
+
+        <span className="decorative-star star-two">
+          ✦
+        </span>
+
+        <span className="decorative-star star-three">
+          ✦
+        </span>
+
+        {/* Curved decorative lines */}
+        <div className="hero-curve curve-one" />
+        <div className="hero-curve curve-two" />
+
+        <div className="hero-content">
+
+          <h1>
+            Explore Our Shop
+          </h1>
+
+          <p>
+            From skincare to makeup, our platform features a
+            wide range of products that cater to your beauty
+            needs. We strive to provide our customers with a
+            luxury shopping experience, from browsing through
+            our carefully selected products to receiving them
+            in our signature packaging. Shop with us for the
+            ultimate in beauty luxury.
           </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {data.products.map((product) => (
-              <Card key={product.id} className="overflow-hidden">
-                <img
-                  src={product.thumbnail}
-                  alt={product.title}
-                  className="h-48 w-full object-cover"
-                />
 
-                <CardHeader>
-                  <CardTitle>{product.title}</CardTitle>
-                  <CardDescription>
-                    {product.category}
-                  </CardDescription>
-                </CardHeader>
+        </div>
 
-                <CardContent>
-                  <p className="mb-2 text-lg font-semibold">
-                    ${product.price}
-                  </p>
-                  <p className="mb-4 text-sm text-gray-500">
-                    Rating: ⭐ {product.rating}
-                  </p>
+        {/* Simple decorative illustration */}
+        <div className="hero-illustration">
+          <div className="illustration-star">
+            ✦
+          </div>
 
-                  <a
-                    href={`/products/${product.id}`}
-                    className="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                  >
-                    View Details
-                  </a>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="illustration-shape">
+            ♡
+          </div>
+        </div>
+
+      </section>
+
+
+      {/* =========================
+          PRODUCTS
+      ========================= */}
+
+      <section className="products-section">
+
+        {/* Categories */}
+
+        <div className="category-tabs">
+
+          {categories.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() =>
+                handleCategory(item.value)
+              }
+              className={
+                category === item.value
+                  ? "category-tab active"
+                  : "category-tab"
+              }
+            >
+              {item.label}
+            </button>
+          ))}
+
+        </div>
+
+
+        {/* Loading */}
+
+        {isPending && (
+          <div className="products-message">
+            Loading products...
           </div>
         )}
 
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={() => setPage((current) => current - 1)}
-            disabled={page === 0}
-            className="rounded-md border bg-white px-4 py-2 disabled:opacity-40"
-          >
-            Previous
-          </button>
 
-          <span>
-            Page {page + 1} of {Math.max(1, totalPages)}
-          </span>
+        {/* Error */}
 
-          <button
-            type="button"
-            onClick={() => setPage((current) => current + 1)}
-            disabled={(page + 1) * limit >= data.total}
-            className="rounded-md border bg-white px-4 py-2 disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+        {isError && (
+          <div className="products-message error">
+            Failed to load products.
+          </div>
+        )}
+
+
+        {/* Products */}
+
+        {!isPending &&
+          !isError &&
+          filteredProducts.length > 0 && (
+            <>
+              <div className="products-grid">
+
+                {filteredProducts.map(
+                  (product) => (
+                    <Link
+                      key={product.id}
+                      to={`/products/${product.id}`}
+                      className="product-card"
+                    >
+
+                      <div className="product-image-container">
+
+                        <img
+                          src={product.thumbnail}
+                          alt={product.title}
+                          loading="lazy"
+                          className="product-image"
+                        />
+
+                      </div>
+
+
+                      <div className="product-details">
+
+                        <h2>
+                          {product.title}
+                        </h2>
+
+                        <p className="product-category">
+                          {product.category.replace(
+                            /-/g,
+                            " "
+                          )}
+                        </p>
+
+                        <p className="product-price">
+                          ${product.price.toFixed(2)}
+                        </p>
+
+                      </div>
+
+                    </Link>
+                  )
+                )}
+
+              </div>
+
+
+              {/* Pagination */}
+
+              <div className="pagination">
+
+                <button
+                  type="button"
+                  disabled={page === 0}
+                  onClick={() =>
+                    setPage(
+                      (current) =>
+                        current - 1
+                    )
+                  }
+                >
+                  ←
+                </button>
+
+                <span>
+                  Page {page + 1} of{" "}
+                  {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={
+                    (page + 1) * limit >=
+                    (data?.total ?? 0)
+                  }
+                  onClick={() =>
+                    setPage(
+                      (current) =>
+                        current + 1
+                    )
+                  }
+                >
+                  →
+                </button>
+
+              </div>
+            </>
+          )}
+
+
+        {/* No products */}
+
+        {!isPending &&
+          !isError &&
+          filteredProducts.length === 0 && (
+            <div className="products-message">
+              No products found.
+            </div>
+          )}
+
+      </section>
+
     </main>
   );
 }
